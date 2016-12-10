@@ -1,20 +1,3 @@
-# cls
-
-CLS is Javascript library supporting object-oriented programming.
-
-The main aim of creating CLS is to provide a simpler mechanism for the class
-declaration, similar to that used in other object-oriented languages. At the
-same time use the strengths they have Javascript.
-
-# Install
-```bash
-git clone https://github.com/ttmdear/cls
-```
-```html
-  <script src="cls.js"></script>
-```
-# Example
-```javascript
 var Record = cls.class({
     // The word "abstract" indicates whether the object can be created that
     // class.  If the value is not defined, it will be set to "false".
@@ -236,4 +219,3 @@ console.log(dog1 instanceof Record);// true
 console.log(dog1 instanceof Animal);// true
 console.log(dog1 instanceof Dog);// true
 console.log(dog1 instanceof Cat);// false
-```

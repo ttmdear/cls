@@ -1,7 +1,13 @@
+/*
+ * (c) ttmdear <ttmdear@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 (function (scope, factory) {
     if (typeof define === "function" && define.amd) {
-        define(function(taskm){
-            return factory(taskm);
+        define(function(){
+            return factory();
         });
 
     } else if (typeof module === "object" && module.exports) {
@@ -10,87 +16,55 @@
         };
 
     } else {
-        scope.cls = factory(scope.taskm);
+        scope.cls = factory();
     }
 
 }(this, function () {
     "use strict";
 
-    var modules = {
-        base : {
-            init : function(){},
-            isInstanceOf : function(def)
-            {
-                if (this instanceof def) {
-                    return true;
-                }
+    var _ = {
+        // prze
+        protected : {},
+        id : 0,
+        modules : {
 
-                var thisReflect = new Reflect(this.contructor);
-                var defReflect = new Reflect(def);
+        }
+    };
 
-                var thisInterfaces = thisReflect.getInterfaces();
-                var defReflect = defReflect.getInterfaces();
+    /**
+     * Generuje unikalne ID
+     */
+    function uniqueID()
+    {
+        _.id++;
+        return 'id'+_.id;
+    }
 
-                if (thisInterfaces.indexOf(def) >= 0) {
-                    return true;
-                }
+    function eachOwn(object, foreach, types)
+    {
+        types = types === undefined ? [] : types;
 
-                return false;
-            },
-            assertInstanceOf : function(def)
-            {
-                if (!this.isInstanceOf(def)) {
-                    throw("Is not instance of");
+        for(var i in object){
+
+            if (types.length) {
+                for(var type in types){
+                    if (isTypeOf(object[i], typs[type])) {
+                        continue;
+                    }
                 }
             }
-        },
-        events : {
-            init : function()
-            {
-                this.events = {};
-            },
-            on : function()
-            {
-            },
-            trigger : function()
-            {
 
+            if (object.hasOwnProperty(i)) {
+                if(foreach(object[i], i, object) === false){
+                    return;
+                }
+            }else{
             }
         }
     }
 
-    function mixe(object, mixe, ommit, clean) {
-        ommit = ommit === undefined ? [] : ommit;
-        clean = clean === undefined ? false : clean;
-
-        for(var attribute in mixe){
-            if(mixe.hasOwnProperty(attribute)){
-                if (ommit.indexOf(attribute) >= 0) {
-                    continue;
-                }
-
-                object[attribute] = mixe[attribute];
-
-                if (clean) {
-                    delete mixe[attribute];
-                }
-            }
-        }
-    }
-
-    function each(object, call, hasOwnProperty) {
-        hasOwnProperty = hasOwnProperty === undefined ? true : false;
-        for(var attribute in object){
-            if (hasOwnProperty && object.hasOwnProperty(attribute)) {
-                if(call.call(object, object[attribute], attribute) == false){
-                    break;
-                }
-            }
-        }
-
-    }
-
-    function isTypeOf(variable, type) {
+    function isTypeOf(variable, type)
+    {
         switch(type){
             case 'Array' :
                 return Array.isArray(variable);
@@ -99,286 +73,409 @@
         }
     }
 
-    function assert(expresion, msg) {
-        if (expresion === false) {
-            throw(msg);
+    function mixe(object, mixe, ommit, clean, block, only)
+    {
+        ommit = ommit === undefined ? [] : ommit;
+        clean = clean === undefined ? false : clean;
+        block = block === undefined ? false : block;
+        only = only === undefined ? false : only;
+
+        for(var attribute in mixe){
+            if(mixe.hasOwnProperty(attribute)){
+                if (ommit.indexOf(attribute) >= 0) {
+                    continue;
+                }
+
+                if (only !== false) {
+                    if (only.indexOf(attribute) === -1) {
+                        continue;
+                    }
+                }
+
+                if (block) {
+                    df(object, attribute, mixe[attribute]);
+                }else{
+                    object[attribute] = mixe[attribute];
+                }
+
+                if (clean) {
+                    delete mixe[attribute];
+                }
+            }
         }
     }
 
-    function Reflect(def)
+    function df(object, property, value)
     {
-        this.getMethods = function()
-        {
-            var api = [];
+        Object.defineProperty(object, property, {
+            configurable : false,
+            enumerable : false,
+            value : value,
+            writable : false
+        });
+    }
 
-            for(var attribute in def.prototype){
-                var value = def.prototype[attribute];
-
-                if (isTypeOf(value, 'function')) {
-                    api.push(attribute);
-                }
-            }
-
-            for(var attribute in def.prototype.static){
-                var value = def.prototype.static[attribute];
-
-                if (isTypeOf(value, 'function')) {
-                    api.push("static."+attribute);
-                }
-            }
-
-            return api;
-        }
-
-        this.getInterfaces = function()
-        {
-            var api = [];
-
-            function traverse(start)
-            {
-                var interfaces = [];
-
-                if (start.hasOwnProperty('_implements')) {
-                    Array.prototype.push.apply(interfaces, start._implements);
-                }
-
-                if (start.__proto__ !== null) {
-                    Array.prototype.push.apply(interfaces,traverse(start.__proto__));
-                }
-
-                return interfaces;
-            }
-
-            var interfacesTmp = traverse(def.prototype);
-            var interfaces = [];
-
-            for(var i in interfacesTmp){
-                if (interfaces.indexOf(interfacesTmp[i]) == -1) {
-                    interfaces.push(interfacesTmp[i]);
-                }
-            }
-
-            return interfaces;
-        }
-
-        this.isAbstract = function()
-        {
-
-        }
-    };
-
-    function cls(def)
+    function isDefined(variable)
     {
-        // nasze proto
-        var proto;
+        return !isUndefined(variable);
+    }
 
-        def._extends = def._extends === undefined ? null : def._extends;
-        def._abstract = def._abstract === undefined ? false : def._abstract;
-        def._implements = def._implements === undefined ? [] : def._implements;
-        def._static = def._static === undefined ? {} : def._static;
-        def._private = def._private === undefined ? [] : def._private;
+    function isUndefined(variable)
+    {
+        return variable === undefined;
+    }
 
-        if (def._extends !== null) {
-            assert(isTypeOf(def._extends, 'function'), "_extends must be class");
+    function createChain(object, attribute, begin)
+    {
+        if (object.__proto__) {
+            var parentProto = createChain(object.__proto__, attribute, begin);
 
-            // dziedziczymy wiec tworze proto ktorego __proto__ jest rowne
-            // prototype klasy z ktorej dziedzicze
-            proto = Object.create(def._extends.prototype);
+            if (object.hasOwnProperty(attribute)) {
+                var tmp = Object.create(parentProto);
+
+                mixe(tmp, object[attribute]);
+                df(tmp, 'defID', object.defID);
+                return tmp;
+            }else{
+                // nie mam takiego atrybutu wiec zwracam rodzica
+                return parentProto;
+            }
+
+            var objectAttribute = Object.create(begin);
+            mixe(objectAttribute, object[attribute]);
+
         }else{
-            // nie ma dziedziczenia, wiec proto jest prototype Object
-            // standardowe zachowanie dla tworzenia obiektu przez {}
-            proto = Object.create(Object.prototype);
-            proto.init = function(){};
+            // doszedlem do konca
+            if (object.hasOwnProperty(attribute)) {
+                // obiekt ma taka wlasciwosc na postawie ktorej tworzony jest
+                // chain
+                var tmp = Object.create(begin);
 
-            Object.defineProperty(proto, '_modules', {
-                configurable : false,
-                enumerable : false,
-                value : [],
-                writable : false
-            });
+                // kopiuje walsciwosci z tego atrybutu
+                mixe(tmp, object[attribute]);
+                return tmp;
+            }else{
+                // obiekt nie ma takiej wlasnyi, wiec zwracam poczatek
+                return begin;
+            }
+        }
+    }
 
-            for(var model in modules){
-                var model = modules[model];
+    function moveToProto(object, own, ommit)
+    {
+        ommit = ommit === undefined ? [] : ommit;
 
-                mixe(proto, model, ['init']);
+        for(var attribute in object){
+            if (object.hasOwnProperty(attribute)) {
+                if (ommit.indexOf(attribute) !== -1) {
+                    continue;
+                }
 
-                if (model.hasOwnProperty('init')) {
-                    proto._modules.push(model.init);
+                if (own.indexOf(attribute) === -1) {
+                    object.__proto__[attribute] = object[attribute];
+                    delete object[attribute];
                 }
             }
         }
+    }
 
-        // metadane ktore zostana zapisane w strukturze klasy
-        var metadata = [
-            '_extends',
-            '_abstract',
-            '_implements',
-            '_private',
-        ];
+    function wrapObjectMethods(at, chain)
+    {
+        chain = chain === undefined ? true : chain;
 
-        // atrybutu ktore maja byc pominiete
-        var ommit = [
-            '_static'
-        ];
+        if (!at.hasOwnProperty('wrappered')) {
+            eachOwn(at, function(value, attribute){
+                if (!isTypeOf(value, 'function')) {
+                    // przepisuje wlasciwosc
+                    at[attribute] = value;
+                }else{
+                    at[attribute] = function(){
+                        // referencja na obiekt wywolujacy
+                        var context;
 
-        assert(isTypeOf(def._abstract, 'boolean'), "_abstract must be boolean");
-        assert(isTypeOf(def._implements, 'Array'), "_implements must be array");
+                        if (this.hasOwnProperty('context')) {
+                            // jesli metoda jest wywolana z context obiektu,
+                            // czyli wywolanie metody publicznej ktora jest
+                            // wywolywana na poczatku z contextu obiektu
+                            context = this.context;
+                        }else{
+                            context = this;
+                        }
 
-        // przechodze po wszystkich atrybutach z definicji
+                        // przepisanie wartosci z private
+                        eachOwn(context.call, function(call, defID){
+                            moveToProto(call, call.private, ['supper']);
+                        });
+
+                        var call;
+
+                        // niema przestrzeni call wiec taka tworze
+                        if (isUndefined(context.call[at.defID])) {
+                            call = Object.create(context);
+
+                            // kopiuje attrybuty prywatne do contextu
+                            mixe(call, at.private);
+                            df(call, 'private', Object.keys(at.private));
+
+                            // zapisuje context do obiektu
+                            context.call[at.defID] = call;
+
+                            // do przestrzeni call zapisuje referencje
+                            // contextu, wynika to stad ze jesli wywolam metode
+                            // prywatna z poziomu metody prywatnej do musze
+                            // miec referencje do contextu
+                            df(call, 'context', context);
+                            df(call, 'instance', context.instance);
+                            // df(call, '_name', 'call');
+                        }else{
+                            call = context.call[at.defID];
+                        }
+
+                        if (call.suppers === undefined) {
+                            call.suppers = [];
+                        }
+
+                        call.suppers.push(attribute);
+
+                        // todo : trzeba zabezpieczyc sie przed operacjami
+                        // asynchronicznymi
+                        call.supper = function(){
+                            var context = this;
+                            var attribute = call.suppers[call.suppers.length-1];
+
+                            if (isDefined(at.__proto__[attribute])) {
+                                return at.__proto__[attribute].apply(this, arguments);
+                            }else{
+                                throw("There is no supper method "+attribute);
+                            }
+                        }
+
+                        var result = value.apply(call, arguments);
+                        call.suppers.pop();
+
+                        if (result === call) {
+                            return context.instance;
+                        }
+
+                        return result;
+                    }
+                }
+            });
+        }
+
+        // dodaje flage wrappered okreslic ze dane metody w obiekcie zostaly
+        // owrapowane, chodzi tutaj o metody publiczne ktore sa w proto, a dane
+        // proto jest wspoldzielone przez wiele definicji
+        df(at, 'wrappered', true);
+
+        if (!at.hasOwnProperty('root') && chain) {
+            return wrapObjectMethods(at.__proto__, true);
+        }
+
+        return true;
+    }
+
+    function imp(objectA, objectB)
+    {
+        var fnA = Object.keys(objectA);
+
+        for(var attribute in objectB){
+            var value = objectB[attribute];
+
+            if (fnA.indexOf(attribute) === -1) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function hashDef(def)
+    {
+        var string = "";
+
         for(var attribute in def){
+            if (!def.hasOwnProperty(attribute)) {
+                continue;
+            }
+
             var value = def[attribute];
 
-            if (def.hasOwnProperty(attribute) && ommit.indexOf(attribute) == -1) {
+            if (isTypeOf(value, 'function')) {
+                string += value.toString();
+            }else{
+                string += value;
+            }
+        }
+    }
 
-                if (metadata.indexOf(attribute) >= 0) {
-                    // atrybutu informacyjne klasy
-                    Object.defineProperty(proto, attribute, {
-                        configurable : false,
-                        enumerable : false,
-                        value : value,
-                        writable : false
-                    });
+    function setupModules(proto, modules)
+    {
+        eachOwn(modules, function(module){
+            module = module.prototype;
 
-                }else if(isTypeOf(value, 'function')) {
-                    var wrapper = function(proto, value, attribute) {
-                        proto[attribute] = function() {
-                            var context = this;
-                            var wrapperObj = Object.create(context);
+            // przenosze atrybuty private, protected, static oraz public
+            mixe(proto.private, module.private);
+            mixe(proto.protected, module.protected);
+            mixe(proto.static, module.static);
 
-                            wrapperObj.supper = function() {
-                                mixe(context, wrapperObj, ['supper'], true);
+            // public
+            mixe(proto, module, [
+                'abstract',
+                'implements',
+                'modules',
 
-                                if (proto.__proto__[attribute] !== undefined) {
-                                    proto.__proto__[attribute].apply(context, arguments);
-                                }
-                            }
+                'protected',
+                'private',
+                'static',
+            ]);
 
-                            var result = value.apply(wrapperObj, arguments);
-                            mixe(context, wrapperObj, ['supper'], true);
-
-                            return result;
-                        }
-                    }
-
-                    wrapper.bind(this, proto, value, attribute)();
-                }else{
-                    proto[attribute] = value;
+            if (module.hasOwnProperty('modules')) {
+                if (module.modules.length) {
+                    setupModules(proto, module.__proto__.modules);
                 }
             }
-        }
-
-
-        var init = function(object){
-            if (this._abstract === true) {
-                throw("The abstract class can not be create.");
-            }
-
-            // init modules
-            for(var i in this._modules){
-                var module = this._modules[i];
-                module.call(this);
-            }
-
-            this.private = {};
-            if (this.__proto__.hasOwnProperty('_private')) {
-                mixe(this.private, this._private);
-            }
-
-            this.init.apply(this, arguments);
-        }
-
-        // jedynie function.prototype dodaje contructor, tutaj musze dodac
-        // recznie
-        Object.defineProperty(proto, 'contructor', {
-            configurable : false,
-            enumerable : false,
-            value : init,
-            writable : false
         });
+    }
 
-        // _static
-        var staticProto = proto.static === undefined ? {} : proto.static;
-        var staticScope = Object.create(staticProto);
-        var staticDef = def._static;
+    // 1. Dla kazdej definicji musze okreslic wlasny protected chain
+    function define(def)
+    {
+        // hashDef(def);
+        var proto;
 
-        for(var attribute in staticDef){
-            var value = staticDef[attribute];
+        def.protected = def.protected === undefined ? {} : def.protected;
+        def.private = def.private === undefined ? {} : def.private;
+        def.static = def.static === undefined ? {} : def.static;
+        def.abstract = def.abstract === undefined ? false : def.abstract;
+        def.modules = def.modules === undefined ? [] : def.modules;
 
-            if (staticDef.hasOwnProperty(attribute)) {
-                if(isTypeOf(value, 'function')) {
-                    var wrapper = function(staticScope, value, attribute) {
-                        staticScope[attribute] = function() {
-                            var context = this;
-                            var wrapperObj = Object.create(context);
-
-                            wrapperObj.supper = function() {
-                                mixe(context, wrapperObj, ['supper'], true);
-                                if (staticScope.__proto__[attribute] !== undefined) {
-                                    staticScope.__proto__[attribute].apply(context, arguments);
-                                }
-                            }
-
-                            var result = value.apply(wrapperObj, arguments);
-                            mixe(context, wrapperObj, ['supper'], true);
-
-                            return result;
-                        }
-                    }
-
-                    wrapper.bind(this, staticScope, value, attribute)();
-                }else{
-                    staticScope[attribute] = value;
-                }
-            }
+        if (def.extends) {
+            proto = Object.create(def.extends.prototype);
+        }else{
+            proto = Object.create(Object.prototype);
+            df(proto, 'root', true);
         }
 
-        Object.defineProperty(staticScope, 'self', {
-            configurable : false,
-            enumerable : false,
-            value : init,
-            writable : false
-        });
+        // przypisuje defID
+        var defID;
 
-        proto.static = staticScope;
+        if (isDefined(def.defID)) {
+            defID = def.defID;
+            delete def.defID;
+        }else{
+            defID = uniqueID();
+        }
 
-        init.prototype = proto;
+        df(proto, 'defID', defID);
+
+        // przenoszenie informacji o klasie
+        mixe(proto, def, [], true, true, [
+            'abstract',
+            'implements',
+            'protected',
+            'private',
+            // 'modules',
+            // 'extends',
+        ]);
+
+        // reszta atrybutow jest publiczna z wyjatkiem extends i static
+        mixe(proto, def, ['static', 'extends'], true, false);
+
+        // modules
+        setupModules(proto, proto.modules);
+
+        // dla kazdej klasy jest tworzony odpowidni protected chain, nastepnie
+        // jest zapisywany w przestrzeni wspolnej
+        var _protected = createChain(proto, 'protected', proto);
+
+        // protected -> protected -> proto -> proto
+        wrapObjectMethods(_protected, true);
+
+        _.protected[defID] = _protected;
 
         // implements
-        var reflection = new Reflect(init);
-        var defApi = reflection.getMethods();
-        var interfaces = reflection.getInterfaces();
-        var notImplemented = [];
+        if (proto.hasOwnProperty('implements')) {
+            for(var i in proto.implements){
+                var def = proto.implements[i];
 
-        for(var i in interfaces){
-            var reflection = new Reflect(interfaces[i]);
-            var methods = reflection.getMethods();
-
-            for(var i in methods){
-                var method = methods[i];
-
-                if (defApi.indexOf(method) == -1) {
-                    notImplemented.push(method);
+                if (!imp(proto, def.prototype)) {
+                    throw("Not all methods are implemented");
                 }
             }
         }
 
-        if (notImplemented.length > 0) {
-            throw("Class must implements methods "+notImplemented.join(','));
+        // module
+
+        // init
+        var init = function()
+        {
+            if (this.abstract) {
+                throw("The class can't not be created because is abstract.");
+            }
+
+            // dla kazdego obiektu tworzony jest jego context, w tym kontekscie
+            // sa wywolywane metody
+            var context = Object.create(_.protected[this.defID]);
+
+            // w kontekscie jest zmienna call ktora przetrzymuje wywolania do
+            df(context, 'call', {});
+            df(context, 'instance', this);
+            df(context, '_name', 'context');
+
+            // referencja do contextu jest przetrzymywana w obiekcie
+            df(this, 'context', context);
+
+            if (isDefined(this.init)) {
+                this.init.apply(this, arguments);
+            }
         }
 
-        // console.log('static', proto.static);
-        // attach static object
-        for(var i in proto.static){
-            init[i] = proto.static[i].bind(proto.static);
+        // static
+        if (def.static) {
+            var dstatic = def.static;
+
+            var _static;
+
+            if(def.extends){
+                _static = Object.create(def.extends.prototype.static);
+            }else{
+                _static = {};
+            }
+
+            mixe(_static, dstatic);
+
+            eachOwn(_static, function(value, attribute){
+                if (isTypeOf(value, 'function')) {
+                    _static[attribute] = function(){
+                        return value.apply(_static, arguments);
+                    }
+                }else{
+                    return;
+                }
+            });
+
+            df(_static, 'self', init);
+
+            proto.static = _static;
+
+            // metody statyczne binduje do constructora
+            for(var attribute in _static){
+                var value = _static[attribute];
+
+                if (isTypeOf(value, 'function')) {
+                    init[attribute] = value.bind(_static);
+                }
+            }
         }
+
+        df(proto, 'constructor', init);
+        init.prototype = proto;
 
         return init;
     }
 
     return {
-        class : cls,
-        loadModule : function(name, module){
-            modules[name] = module;
-        }
+        class : define
     };
 }));

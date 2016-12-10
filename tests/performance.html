@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Performance</title>
+
+  <script src="../src/cls.js" ></script>
+  <script src="performance.js"></script>
+  <script>
+    window.onload = function()
+    {
+        snow();
+    }
+  </script>
+</head>
+<body>
+    <p>
+        <input id="numberOfSnowflakes"/><b>Number of snowflakes</b> </br>
+        <input id="time"><b>Time</b></br>
+        <input id="avtime"><b>AV Time</b></br>
+        <button id="start">Start</button></br>
+        <button id="stop">Stop</button></br>
+    </p>
+
+    <canvas id="canvas" width="1000" height="500"></canvas>
+</body>
+</html>
