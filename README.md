@@ -5,6 +5,12 @@ CLS is Javascript library supporting object-oriented programming.
 The main aim of creating CLS is to provide a simpler mechanism for the class
 declaration, similar to that used in other object-oriented languages. At the
 same time use the strengths they have Javascript.
+# Preface
+Library was creating when ECMA6 standard was not so wide supported by browsers. 
+
+With new standar ECMAScript 6, which fully supports for classes. I do not recoment to use my library at prodution environment.
+
+But I encourage you to see, how I did it, for educational purposes.
 
 # Install
 ```bash
